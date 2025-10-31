@@ -24,16 +24,16 @@ const allowedOrigins = [
 ];
 
 app.use(
-	cors({
-		origin: function (origin, callback) {
-			if (!origin || allowedOrigins.includes(origin)) {
-				callback(null, true);
-			} else {
-				callback(new Error('Not allowed by CORS'));
-			}
-		},
-		credentials: true,
-	})
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
 );
 app.use(express.json());
 
@@ -52,16 +52,16 @@ app.use('/api/recurring', require('./routes/recurringTransactionRoutes'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('/', (req, res) => {
-	res.send('API is Running');
+  res.send('API is Running');
 });
 
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () =>
-	console.log(`Server started on port ${PORT}`)
+  console.log(`Server started on port ${PORT}`)
 );
 
-cron.schedule("*/10 * * * *", async() => {
+cron.schedule("*/10 * * * *", async () => {
   const keepAliveUrl = process.env.KEEP_ALIVE_URL;
   if (!keepAliveUrl) {
     console.error(
@@ -78,5 +78,4 @@ cron.schedule("*/10 * * * *", async() => {
   }
 });
 
-module.exports = { app, server };
 module.exports = { app, server };
