@@ -23,16 +23,18 @@ const allowedOrigins = [
   "https://paisable.netlify.app",
 ];
 
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // sanitizeMiddleware
@@ -55,9 +57,11 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+const server = app.listen(PORT, () =>
+  console.log(`Server started on port ${PORT}`)
+);
 
-cron.schedule("*/10 * * * *", async() => {
+cron.schedule("*/10 * * * *", async () => {
   const keepAliveUrl = process.env.KEEP_ALIVE_URL;
   if (!keepAliveUrl) {
     console.error(
