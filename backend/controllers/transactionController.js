@@ -201,9 +201,25 @@ const getChartData = async (req, res) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    // Optional date range from query for category aggregations
+    const { startDate, endDate } = req.query;
+    let dateMatch = {};
+    if (startDate || endDate) {
+      dateMatch.addedOn = {};
+      if (startDate) dateMatch.addedOn.$gte = new Date(startDate);
+      if (endDate) dateMatch.addedOn.$lte = new Date(endDate);
+    }
+
     // Data for Expenses by Category (Pie Chart)
     const expensesByCategory = await IncomeExpense.aggregate([
-      { $match: { user: userId, isIncome: false, isDeleted: false } },
+      { $match: { user: userId, isIncome: false, isDeleted: false, ...(dateMatch.addedOn ? { addedOn: dateMatch.addedOn } : {}) } },
+      { $group: { _id: '$category', total: { $sum: '$cost' } } },
+      { $project: { name: '$_id', total: 1, _id: 0 } }
+    ]);
+
+    // Data for Income by Category (Pie Chart)
+    const incomeByCategory = await IncomeExpense.aggregate([
+      { $match: { user: userId, isIncome: true, isDeleted: false, ...(dateMatch.addedOn ? { addedOn: dateMatch.addedOn } : {}) } },
       { $group: { _id: '$category', total: { $sum: '$cost' } } },
       { $project: { name: '$_id', total: 1, _id: 0 } }
     ]);
@@ -234,7 +250,7 @@ const getChartData = async (req, res) => {
       { $project: { date: '$_id', total: 1, _id: 0 } }
     ]);
 
-    res.json({ expensesByCategory, expensesOverTime, incomeOverTime });
+    res.json({ expensesByCategory, incomeByCategory, expensesOverTime, incomeOverTime });
   } catch (error) {
     // Also log the error to the backend console for easier debugging
     console.error('Error in getChartData:', error);
