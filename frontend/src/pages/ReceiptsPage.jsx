@@ -14,7 +14,6 @@ const ReceiptsPage = () => {
 
 	const [openEditReceiptResult, setOpenEditReceiptResult] = useState(false);
 	const [categories, setCategories] = useState([]);
-	const [isEditingResult, setIsEditingResult] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 
 	// Fetch categories when component mounts
@@ -34,7 +33,7 @@ const ReceiptsPage = () => {
 	// Handle mobile responsive resize
 	useEffect(() => {
 		const handleResize = () => {
-			return setIsMobile(window.innerWidth <= 767);
+			setIsMobile(window.innerWidth <= 767);
 		};
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
@@ -106,7 +105,7 @@ const ReceiptsPage = () => {
 				isIncome: receiptResult.extractedData.isIncome || false,
 			};
 
-			const response = await api.post("/receipts/save-transaction", {
+			await api.post("/receipts/save-transaction", {
 				receiptId: receiptResult._id,
 				transactionData: transactionData,
 			});
@@ -139,12 +138,15 @@ const ReceiptsPage = () => {
 
 	// Handle edit button in result div
 	const handleEditResult = () => {
-		setIsEditingResult(true);
 		setOpenEditReceiptResult(true);
 	};
 
-	const handleNewCategory = (newCategory) => {
-		setCategories((prev) => [...prev, newCategory].sort());
+	const handleNewCategory = (newCategory, isIncome) => {
+		setCategories((prev) =>
+			[...prev, { name: newCategory, isIncome }].sort((a, b) =>
+				a.name.localeCompare(b.name)
+			)
+		);
 	};
 
 	return (
@@ -232,7 +234,10 @@ const ReceiptsPage = () => {
 							</div>
 
 							<img
-								src={`http://localhost:5001${receiptResult.fileUrl}`}
+								src={`${import.meta.env.VITE_API_URL?.replace(
+									"/api",
+									""
+								)}${receiptResult.fileUrl}`}
 								alt="Uploaded Receipt"
 								className="mt-4 rounded-lg max-w-full h-auto"
 							/>
@@ -259,7 +264,6 @@ const ReceiptsPage = () => {
 					isOpen={openEditReceiptResult}
 					onClose={() => {
 						setOpenEditReceiptResult(false);
-						setIsEditingResult(false);
 					}}
 					onSubmit={handleEditReceiptSubmit}
 					transaction={{
@@ -271,7 +275,12 @@ const ReceiptsPage = () => {
 							new Date().toISOString().split("T")[0],
 						isIncome: receiptResult.extractedData.isIncome || false,
 					}}
-					categories={categories}
+					expenseCategories={categories
+						.filter((cat) => !cat.isIncome)
+						.map((cat) => cat.name || cat)}
+					incomeCategories={categories
+						.filter((cat) => cat.isIncome)
+						.map((cat) => cat.name || cat)}
 					onNewCategory={handleNewCategory}
 				/>
 			)}
